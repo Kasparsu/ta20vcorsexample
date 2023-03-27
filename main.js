@@ -1,30 +1,39 @@
 import puppeteer from 'puppeteer';
 
 (async () => {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        headless: false,
+        args:[
+        '--start-maximized' // you can also use '--start-fullscreen'
+        ]
+    });
     const page = await browser.newPage();
-  
-    await page.goto('https://developer.chrome.com/');
-  
+    await page.setViewport({width: 1920, height: 1040});
+    await page.goto('https://spaceinvasion.bitmeup.com/');
     // Set screen size
-    await page.setViewport({width: 1080, height: 1024});
-  
-    // Type into search box
-    await page.type('.search-box__input', 'automate beyond recorder');
-  
-    // Wait and click on first result
-    const searchResultSelector = '.search-box__link';
-    await page.waitForSelector(searchResultSelector);
-    await page.click(searchResultSelector);
-  
-    // Locate the full title with a unique string
-    const textSelector = await page.waitForSelector(
-      'text/Customize and automate'
-    );
-    const fullTitle = await textSelector.evaluate(el => el.textContent);
-  
-    // Print the full title
-    console.log('The title of this blog post is "%s".', fullTitle);
-  
-    await browser.close();
+    await page.waitForNetworkIdle();
+    await page.waitForSelector('[id="bitmeup.login.email"]');
+    await page.type('[id="bitmeup.login.email"]', 'dhgsagrg@sharklasers.com');
+    await page.type('[id="bitmeup.login.password"]', 'Password1');
+    await page.waitForNetworkIdle();
+    await page.waitForSelector('.login_button');
+    await page.click('.login_button');
+    await page.waitForNetworkIdle();
+    await page.waitForSelector('[onclick="startpage.selectInstance(46)"]');
+    await page.click('[onclick="startpage.selectInstance(46)"]');
+    await page.waitForNetworkIdle();
+    let url = new URL(page.url());
+    let sid = url.searchParams.get('sid');
+    await page.goto('https://spaceinvasion.bitmeup.com/indexInternal.es?action=internalHome&sid='+ sid);
+    await page.waitForNetworkIdle();
+    let tasks = await page.$$('[id="tutorial.text"] td>table>tbody>tr>td td:first-of-type');
+    
+    console.log(tasks);
+    tasks = await Promise.all(tasks.map(async task => {
+        let text = await task.evaluate(el => el.textContent)
+        
+        return text.trim().match(/Increase your ([\w\s]+) level/)[1];
+    }));
+    console.log(tasks);
+    //await browser.close();
   })();
